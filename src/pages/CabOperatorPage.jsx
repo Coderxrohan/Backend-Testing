@@ -20,130 +20,142 @@ const CabRouteManagement = () => {
 
     // --- Effects ---
     useEffect(() => {
-        // TODO: Replace with API calls
-        // Example: fetch("/api/cabs").then(res => res.json()).then(setCabs);
-        setCabs([
-            { id: 1, name: "Cab 101", type: "Sedan", seats: 4 },
-            { id: 2, name: "Cab 202", type: "SUV", seats: 6 },
-        ]);
-        setRoutes([
-            { id: 1, from: "NY", to: "MA", distance: "300 km" },
-            { id: 2, from: "MA", to: "NH", distance: "150 km" },
-        ]);
-        setSchedule([
-            { id: 1, cab: "Cab 101", route: "NY - MA", frequency: "Daily", time: "09:00 AM", price: 50 },
-            { id: 2, cab: "Cab 202", route: "MA - NH", frequency: "Weekly", time: "02:00 PM", price: 80 },
-        ]);
+        fetch('http://localhost:5000/api/cabs')
+            .then(res => res.json())
+            .then(setCabs);
+        fetch('http://localhost:5000/api/routes')
+            .then(res => res.json())
+            .then(setRoutes);
+        fetch('http://localhost:5000/api/schedules')
+            .then(res => res.json())
+            .then(setSchedule);
     }, []);
 
     // --- Handlers ---
-    const handleAddCab = (values) => {
-        // TODO: POST /api/cabs
-        setCabs([...cabs, { id: Date.now(), ...values }]);
-        message.success("Cab added successfully");
+    const handleAddCab = async (values) => {
+        const res = await fetch('http://localhost:5000/api/cabs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(values)
+        });
+        const newCab = await res.json();
+        setCabs([...cabs, newCab]);
+        message.success('Cab added successfully');
         setIsCabModalOpen(false);
     };
 
-    const handleAddRoute = (values) => {
-        // TODO: POST /api/routes
-        setRoutes([...routes, { id: Date.now(), ...values }]);
-        message.success("Route added successfully");
+    const handleDeleteCab = async (id) => {
+        await fetch(`http://localhost:5000/api/cabs/${id}`, { method: 'DELETE' });
+        setCabs(cabs.filter(cab => cab.id !== id));
+        message.success('Cab deleted successfully');
+    };
+
+    const handleAddRoute = async (values) => {
+        const res = await fetch('http://localhost:5000/api/routes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(values)
+        });
+        const newRoute = await res.json();
+        setRoutes([...routes, newRoute]);
+        message.success('Route added successfully');
         setIsRouteModalOpen(false);
     };
 
-    const handleAddSchedule = (values) => {
-        // TODO: POST /api/schedules
-        setSchedule([...schedule, { id: Date.now(), ...values }]);
-        message.success("Schedule added successfully");
+    const handleDeleteRoute = async (id) => {
+        await fetch(`http://localhost:5000/api/routes/${id}`, { method: 'DELETE' });
+        setRoutes(routes.filter(route => route.id !== id));
+        message.success('Route deleted successfully');
+    };
+
+    const handleAddSchedule = async (values) => {
+        const res = await fetch('http://localhost:5000/api/schedules', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(values)
+        });
+        const newSchedule = await res.json();
+        setSchedule([...schedule, newSchedule]);
+        message.success('Schedule added successfully');
         setIsScheduleModalOpen(false);
+    };
+
+    const handleDeleteSchedule = async (id) => {
+        await fetch(`http://localhost:5000/api/schedules/${id}`, { method: 'DELETE' });
+        setSchedule(schedule.filter(sch => sch.id !== id));
+        message.success('Schedule deleted successfully');
     };
 
     // --- Table Columns ---
     const cabColumns = [
-        { title: "Cab Name", dataIndex: "name", key: "name" },
-        { title: "Type", dataIndex: "type", key: "type" },
-        { title: "Seats", dataIndex: "seats", key: "seats" },
+        { title: 'Cab Name', dataIndex: 'name', key: 'name' },
+        { title: 'Type', dataIndex: 'type', key: 'type' },
+        { title: 'Seats', dataIndex: 'seats', key: 'seats' },
         {
-            title: "Actions",
+            title: 'Actions',
             render: (_, record) => (
                 <>
                     <Button icon={<EditOutlined />} style={{ marginRight: 8 }} />
-                    <Button icon={<DeleteOutlined />} danger />
+                    <Button icon={<DeleteOutlined />} danger onClick={() => handleDeleteCab(record.id)} />
                 </>
             ),
         },
     ];
 
     const routeColumns = [
-        { title: "From", dataIndex: "from", key: "from" },
-        { title: "To", dataIndex: "to", key: "to" },
-        { title: "Distance", dataIndex: "distance", key: "distance" },
+        { title: 'From', dataIndex: 'from', key: 'from' },
+        { title: 'To', dataIndex: 'to', key: 'to' },
+        { title: 'Distance', dataIndex: 'distance', key: 'distance' },
         {
-            title: "Actions",
+            title: 'Actions',
             render: (_, record) => (
                 <>
                     <Button icon={<EditOutlined />} style={{ marginRight: 8 }} />
-                    <Button icon={<DeleteOutlined />} danger />
+                    <Button icon={<DeleteOutlined />} danger onClick={() => handleDeleteRoute(record.id)} />
                 </>
             ),
         },
     ];
 
     const scheduleColumns = [
-        { title: "Cab", dataIndex: "cab", key: "cab" },
-        { title: "Route", dataIndex: "route", key: "route" },
-        { title: "Frequency", dataIndex: "frequency", key: "frequency" },
-        { title: "Time", dataIndex: "time", key: "time" },
-        { title: "Price ($)", dataIndex: "price", key: "price" },
+        { title: 'Cab', dataIndex: 'cab', key: 'cab' },
+        { title: 'Route', dataIndex: 'route', key: 'route' },
+        { title: 'Frequency', dataIndex: 'frequency', key: 'frequency' },
+        { title: 'Time', dataIndex: 'time', key: 'time' },
+        { title: 'Price ($)', dataIndex: 'price', key: 'price' },
         {
-            title: "Actions",
+            title: 'Actions',
             render: (_, record) => (
                 <>
                     <Button icon={<EditOutlined />} style={{ marginRight: 8 }} />
-                    <Button icon={<DeleteOutlined />} danger />
+                    <Button icon={<DeleteOutlined />} danger onClick={() => handleDeleteSchedule(record.id)} />
                 </>
             ),
         },
     ];
 
     return (
-        <Layout style={{ minHeight: "100vh" }}>
+        <Layout>
             <Sidebar />
-            <Layout>
-                <Content style={{ padding: "24px", background: "#f5f5f5" }}>
-                    <Row gutter={[16, 16]}>
-                        {/* Cab Management */}
-                        <Col span={24}>
-                            <Card
-                                title="Cab Management"
-                                extra={<Button icon={<PlusOutlined />} onClick={() => setIsCabModalOpen(true)}>Add Cab</Button>}
-                            >
-                                <Table dataSource={cabs} columns={cabColumns} rowKey="id" />
-                            </Card>
-                        </Col>
-
-                        {/* Route Management */}
-                        <Col span={24}>
-                            <Card
-                                title="Route Management"
-                                extra={<Button icon={<PlusOutlined />} onClick={() => setIsRouteModalOpen(true)}>Add Route</Button>}
-                            >
-                                <Table dataSource={routes} columns={routeColumns} rowKey="id" />
-                            </Card>
-                        </Col>
-
-                        {/* Schedule Management */}
-                        <Col span={24}>
-                            <Card
-                                title="Schedule Management"
-                                extra={<Button icon={<PlusOutlined />} onClick={() => setIsScheduleModalOpen(true)}>Add Schedule</Button>}
-                            >
-                                <Table dataSource={schedule} columns={scheduleColumns} rowKey="id" />
-                            </Card>
-                        </Col>
-                    </Row>
-                </Content>
-            </Layout>
+            <Content style={{ padding: 24 }}>
+                <Row gutter={[24, 24]}>
+                    <Col span={24}>
+                        <Card title="Cab Management" extra={<Button onClick={() => setIsCabModalOpen(true)}>+ Add Cab</Button>}>
+                            <Table dataSource={cabs} columns={cabColumns} rowKey="id" pagination={false} locale={{ emptyText: 'No data' }} />
+                        </Card>
+                    </Col>
+                    <Col span={24}>
+                        <Card title="Route Management" extra={<Button onClick={() => setIsRouteModalOpen(true)}>+ Add Route</Button>}>
+                            <Table dataSource={routes} columns={routeColumns} rowKey="id" pagination={false} locale={{ emptyText: 'No data' }} />
+                        </Card>
+                    </Col>
+                    <Col span={24}>
+                        <Card title="Schedule Management" extra={<Button onClick={() => setIsScheduleModalOpen(true)}>+ Add Schedule</Button>}>
+                            <Table dataSource={schedule} columns={scheduleColumns} rowKey="id" pagination={false} locale={{ emptyText: 'No data' }} />
+                        </Card>
+                    </Col>
+                </Row>
+            </Content>
 
             {/* --- Modals --- */}
             <Modal
