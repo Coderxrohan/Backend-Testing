@@ -44,11 +44,13 @@ const CabVendorManagementPage = () => {
     const [vendorMetrics, setVendorMetrics] = useState({});
 
     useEffect(() => {
+        fetch('http://localhost:5000/api/vendors')
+            .then(res => res.json())
+            .then(data => setVendors(data));
+    }, []);
+
+    useEffect(() => {
         // Mock data until API is ready
-        setVendors([
-            { id: 1, name: "City Cab Services", contact: "9876543210", address: "Pune", kycStatus: "Verified" },
-            { id: 2, name: "Urban Taxi", contact: "9123456780", address: "Mumbai", kycStatus: "Pending" },
-        ]);
         setVendorMetrics({
             1: { cancellationRate: "2%", punctuality: "95%", rating: 4.7 },
             2: { cancellationRate: "5%", punctuality: "89%", rating: 4.3 },

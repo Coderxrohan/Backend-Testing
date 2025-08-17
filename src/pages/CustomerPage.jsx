@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Box,
     Typography,
@@ -26,44 +26,14 @@ export default function UserManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedUser, setSelectedUser] = useState(null);
     const [openProfileModal, setOpenProfileModal] = useState(false);
+    const [users, setUsers] = useState([]);
 
-    // ---------------- Dummy Data ----------------
-    // Replace with GET API call: /api/admin/users
-    const users = [
-        {
-            id: 1,
-            name: "Amit Sharma",
-            email: "amit@example.com",
-            phone: "+91 9876543210",
-            profilePic: "https://i.pravatar.cc/150?img=1",
-            status: "Active",
-            disputes: 2,
-            rating: 4.5,
-            joined: "2024-05-15",
-        },
-        {
-            id: 2,
-            name: "Priya Singh",
-            email: "priya@example.com",
-            phone: "+91 9812345678",
-            profilePic: "https://i.pravatar.cc/150?img=2",
-            status: "Suspicious",
-            disputes: 5,
-            rating: 2.9,
-            joined: "2024-02-11",
-        },
-        {
-            id: 3,
-            name: "Ravi Kumar",
-            email: "ravi@example.com",
-            phone: "+91 9998887776",
-            profilePic: "https://i.pravatar.cc/150?img=3",
-            status: "Banned",
-            disputes: 0,
-            rating: 4.9,
-            joined: "2023-12-25",
-        },
-    ];
+    // ---------------- Effects ----------------
+    useEffect(() => {
+        fetch('http://localhost:5000/api/customers')
+            .then(res => res.json())
+            .then(data => setUsers(data));
+    }, []);
 
     // ---------------- Functions ----------------
     const handleViewProfile = (user) => {
