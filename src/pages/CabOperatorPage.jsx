@@ -4,6 +4,8 @@ import { Layout, Row, Col, Card, Table, Button, Modal, Form, Input, Select, Time
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import Sidebar from "../components/sidebar/Sidebar"; // adjust import path if needed
 import dayjs from "dayjs";
+// import Routeservice from "Routeservice";
+import { getRoutes, addRoute, updateRoute, deleteRoute } from "../services/Routeservice";
 
 const { Content } = Layout;
 const { Option } = Select;
@@ -13,6 +15,7 @@ const CabRouteManagement = () => {
     const [cabs, setCabs] = useState([]);
     const [routes, setRoutes] = useState([]);
     const [schedule, setSchedule] = useState([]);
+    const [editingRoute, setEditingRoute] = useState(null);
     const [isCabModalOpen, setIsCabModalOpen] = useState(false);
     const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -20,21 +23,47 @@ const CabRouteManagement = () => {
 
     // --- Effects ---
     useEffect(() => {
+         console.log("Hello World");
         // TODO: Replace with API calls
         // Example: fetch("/api/cabs").then(res => res.json()).then(setCabs);
         setCabs([
             { id: 1, name: "Cab 101", type: "Sedan", seats: 4 },
             { id: 2, name: "Cab 202", type: "SUV", seats: 6 },
         ]);
-        setRoutes([
-            { id: 1, from: "NY", to: "MA", distance: "300 km" },
-            { id: 2, from: "MA", to: "NH", distance: "150 km" },
-        ]);
+        fetchRoutes();
+        
         setSchedule([
             { id: 1, cab: "Cab 101", route: "NY - MA", frequency: "Daily", time: "09:00 AM", price: 50 },
             { id: 2, cab: "Cab 202", route: "MA - NH", frequency: "Weekly", time: "02:00 PM", price: 80 },
         ]);
     }, []);
+
+
+const fetchRoutes = async () => {
+    console.log("👉 Fetching routes from backend...");
+    try {
+        const res = await getRoutes();
+        console.log("✅ Raw response from getRoutes():", res);
+
+        if (res && res.data) {
+            const mappedRoutes = res.data.map(r => ({
+                id: r.routeId,
+                from: r.origin,
+                to: r.destination,
+                distance: r.distanceKm + " km"
+            }));
+            console.log("✅ Mapped routes for frontend:", mappedRoutes);
+
+            setRoutes(mappedRoutes);
+        } else {
+            console.warn("⚠️ No data found in response");
+        }
+    } catch (err) {
+        console.error("❌ Error fetching routes:", err);
+        message.error("Failed to load routes");
+    }
+};
+
 
     // --- Handlers ---
     const handleAddCab = (values) => {
@@ -44,13 +73,50 @@ const CabRouteManagement = () => {
         setIsCabModalOpen(false);
     };
 
-    const handleAddRoute = (values) => {
-        // TODO: POST /api/routes
-        setRoutes([...routes, { id: Date.now(), ...values }]);
-        message.success("Route added successfully");
-        setIsRouteModalOpen(false);
-    };
+    const handleSaveRoute = async (values) => {
+    try {
+        if (editingRoute) {
+            // UPDATE existing route
+            await updateRoute(editingRoute.id, {
+                origin: values.origin,
+                destination: values.destination,
+                distanceKm: parseFloat(values.distanceKm)
+            });
+            message.success("Route updated successfully");
+        } else {
+            // ADD new route
+            await addRoute({
+                origin: values.origin,
+                destination: values.destination,
+                distanceKm: parseFloat(values.distanceKm)
+            });
+            message.success("Route added successfully");
+        }
 
+        setIsRouteModalOpen(false);
+        form.resetFields();
+        setEditingRoute(null);
+        fetchRoutes();
+    } catch (err) {
+        message.error("Error saving route");
+        console.error("Save route error:", err);
+    }
+};
+
+
+    // --- Delete Route ---
+    const handleDeleteRoute = async (id) => {
+        try {
+                     console.log("Hello World");
+
+            await deleteRoute(id);
+            
+            message.success("Route deleted");
+            fetchRoutes();
+        } catch (err) {
+            message.error("Error deleting route");
+        }
+    };
     const handleAddSchedule = (values) => {
         // TODO: POST /api/schedules
         setSchedule([...schedule, { id: Date.now(), ...values }]);
@@ -82,8 +148,25 @@ const CabRouteManagement = () => {
             title: "Actions",
             render: (_, record) => (
                 <>
-                    <Button icon={<EditOutlined />} style={{ marginRight: 8 }} />
-                    <Button icon={<DeleteOutlined />} danger />
+                    <Button
+                      icon={<EditOutlined />}
+                      style={{ marginRight: 8 }}
+                      onClick={() => {
+                     setEditingRoute(record);
+                     form.setFieldsValue({
+                    origin: record.origin,
+                    destination: record.destination,
+                    distanceKm: parseFloat(record.distanceKm) // store numeric value
+        });
+        setIsRouteModalOpen(true);
+    }}
+/>
+
+                    <Button
+                        icon={<DeleteOutlined />}
+                        danger
+                        onClick={() => handleDeleteRoute(record.id)}
+                    />
                 </>
             ),
         },
@@ -123,10 +206,10 @@ const CabRouteManagement = () => {
                         </Col>
 
                         {/* Route Management */}
-                        <Col span={24}>
+                       <Col span={24}>
                             <Card
                                 title="Route Management"
-                                extra={<Button icon={<PlusOutlined />} onClick={() => setIsRouteModalOpen(true)}>Add Route</Button>}
+                                extra={<Button icon={<PlusOutlined />} onClick={() => { setIsRouteModalOpen(true); form.resetFields(); }}>Add Route</Button>}
                             >
                                 <Table dataSource={routes} columns={routeColumns} rowKey="id" />
                             </Card>
@@ -171,23 +254,25 @@ const CabRouteManagement = () => {
             </Modal>
 
             <Modal
-                title="Add Route"
+                // title={editingRoute ? "Edit Route" : "Add Route"}
+                itle={ "Add Route"}
                 open={isRouteModalOpen}
-                onCancel={() => setIsRouteModalOpen(false)}
+                onCancel={() => { setIsRouteModalOpen(false); setEditingRoute(null); }}
                 onOk={() => form.submit()}
                 okText="Save"
             >
-                <Form form={form} layout="vertical" onFinish={handleAddRoute}>
-                    <Form.Item name="from" label="From" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="to" label="To" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="distance" label="Distance" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-                </Form>
+               <Form form={form} layout="vertical" onFinish={handleSaveRoute}>
+               <Form.Item name="origin" label="From" rules={[{ required: true }]}>
+               <Input />
+               </Form.Item>
+               <Form.Item name="destination" label="To" rules={[{ required: true }]}>
+               <Input />
+               </Form.Item>
+              <Form.Item name="distanceKm" label="Distance (km)" rules={[{ required: true }]}>
+              <Input type="number" />
+              </Form.Item>
+</Form>
+
             </Modal>
 
             <Modal
@@ -226,4 +311,4 @@ const CabRouteManagement = () => {
     );
 };
 
-export default CabRouteManagement;
+export default CabRouteManagement;  
