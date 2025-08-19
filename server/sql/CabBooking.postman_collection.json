@@ -1,0 +1,306 @@
+{
+  "info": {
+    "name": "Cab Booking API (Local)",
+    "_postman_id": "cab-booking-local-collection",
+    "description": "Local Postman collection for Cab Booking app on http://localhost:5000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Cab Operators - GET",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/cab-operators",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "cab-operators"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Cabs - GET",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/cabs",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "cabs"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Cabs - POST",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Cab 404\",\n  \"type\": \"Van\",\n  \"seats\": 9\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/cabs",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "cabs"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Cabs - DELETE (set :id)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/cabs/:id",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "cabs",
+            ":id"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Routes - GET",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/routes",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "routes"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Routes - POST",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"origin\": \"Manhattan\",\n  \"destination\": \"JFK\",\n  \"distance_km\": 27.5,\n  \"eta_min\": 55,\n  \"base_fare\": 40,\n  \"active\": true,\n  \"cab_operator_id\": 1\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/routes",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "routes"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Routes - DELETE (set :id)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/routes/:id",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "routes",
+            ":id"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Schedules - GET",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/schedules",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "schedules"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Schedules - POST",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cab_id\": 1,\n  \"route_id\": 1,\n  \"frequency\": \"Daily\",\n  \"time\": \"09:00\",\n  \"price\": 25\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/schedules",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "schedules"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Schedules - DELETE (set :id)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/schedules/:id",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "schedules",
+            ":id"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Reports - GET",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/reports",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "reports"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Revenue - GET",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/revenue",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "revenue"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Vendors - GET",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/vendors",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "vendors"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Customers - GET",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/customers",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "customers"
+          ]
+        }
+      }
+    }
+  ]
+}
