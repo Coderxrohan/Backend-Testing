@@ -16,74 +16,220 @@ const CabRouteManagement = () => {
     const [isCabModalOpen, setIsCabModalOpen] = useState(false);
     const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-    const [form] = Form.useForm();
+    const [cabForm] = Form.useForm();
+    const [routeForm] = Form.useForm();
+    const [scheduleForm] = Form.useForm();
+
+    // Utility function to refresh all data
+    const refreshAllData = async () => {
+        try {
+            const [cabsRes, routesRes, schedulesRes] = await Promise.all([
+                fetch('http://localhost:5000/api/cabs'),
+                fetch('http://localhost:5000/api/routes'),
+                fetch('http://localhost:5000/api/schedules')
+            ]);
+            
+            const [cabsData, routesData, schedulesData] = await Promise.all([
+                cabsRes.json(),
+                routesRes.json(),
+                schedulesRes.json()
+            ]);
+            
+            setCabs(cabsData);
+            setRoutes(routesData);
+            setSchedule(schedulesData);
+        } catch (error) {
+            console.error('Error refreshing data:', error);
+        }
+    };
 
     // --- Effects ---
     useEffect(() => {
-        fetch('http://localhost:5000/api/cabs')
-            .then(res => res.json())
-            .then(setCabs);
-        fetch('http://localhost:5000/api/routes')
-            .then(res => res.json())
-            .then(setRoutes);
-        fetch('http://localhost:5000/api/schedules')
-            .then(res => res.json())
-            .then(setSchedule);
+        refreshAllData();
     }, []);
 
     // --- Handlers ---
     const handleAddCab = async (values) => {
-        const res = await fetch('http://localhost:5000/api/cabs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(values)
-        });
-        const newCab = await res.json();
-        setCabs([...cabs, newCab]);
-        message.success('Cab added successfully');
-        setIsCabModalOpen(false);
+        try {
+            const res = await fetch('http://localhost:5000/api/cabs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(values)
+            });
+            
+            if (res.ok) {
+                const newCab = await res.json();
+                console.log('New cab added:', newCab);
+                
+                // Refresh all data to ensure consistency
+                await refreshAllData();
+                
+                message.success('Cab added successfully');
+                setIsCabModalOpen(false);
+                cabForm.resetFields();
+            } else {
+                const error = await res.json();
+                message.error('Failed to add cab: ' + (error.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error adding cab:', error);
+            message.error('Error adding cab: ' + error.message);
+        }
     };
 
     const handleDeleteCab = async (id) => {
-        await fetch(`http://localhost:5000/api/cabs/${id}`, { method: 'DELETE' });
-        setCabs(cabs.filter(cab => cab.id !== id));
-        message.success('Cab deleted successfully');
+        try {
+            console.log('Deleting cab with ID:', id); // Debug log
+            const res = await fetch(`http://localhost:5000/api/cabs/${id}`, { 
+                method: 'DELETE' 
+            });
+            
+            if (res.ok) {
+                const result = await res.json();
+                console.log('Delete result:', result);
+                
+                // Refresh all data to reflect cascade deletions
+                await refreshAllData();
+                
+                message.success(`Cab deleted successfully along with ${result.deletedSchedules?.length || 0} related schedules and ${result.deletedRoutes?.length || 0} related routes`);
+            } else {
+                const error = await res.json();
+                message.error('Failed to delete cab: ' + (error.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error deleting cab:', error);
+            message.error('Error deleting cab');
+        }
     };
 
     const handleAddRoute = async (values) => {
-        const res = await fetch('http://localhost:5000/api/routes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(values)
-        });
-        const newRoute = await res.json();
-        setRoutes([...routes, newRoute]);
-        message.success('Route added successfully');
-        setIsRouteModalOpen(false);
+        try {
+            console.log('Adding route with values:', values); // Debug log
+            
+            // Map frontend fields to backend fields
+            const routeData = {
+                origin: values.from,
+                destination: values.to,
+                distance_km: parseFloat(values.distance),
+                eta_min: 30, // default value
+                base_fare: 10, // default value
+                active: true,
+                cab_operator_id: 1 // default value, should be dynamic in real app
+            };
+            
+            console.log('Route data to send:', routeData); // Debug log
+            
+            const res = await fetch('http://localhost:5000/api/routes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(routeData)
+            });
+            
+            if (res.ok) {
+                const newRoute = await res.json();
+                console.log('New route received:', newRoute); // Debug log
+                
+                // Refresh all data to ensure consistency
+                await refreshAllData();
+                
+                message.success('Route added successfully');
+                setIsRouteModalOpen(false);
+                routeForm.resetFields();
+            } else {
+                const error = await res.json();
+                console.error('Error adding route:', error);
+                message.error('Failed to add route: ' + (error.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error adding route:', error);
+            message.error('Error adding route: ' + error.message);
+        }
     };
 
     const handleDeleteRoute = async (id) => {
-        await fetch(`http://localhost:5000/api/routes/${id}`, { method: 'DELETE' });
-        setRoutes(routes.filter(route => route.id !== id));
-        message.success('Route deleted successfully');
+        try {
+            const res = await fetch(`http://localhost:5000/api/routes/${id}`, { method: 'DELETE' });
+            
+            if (res.ok) {
+                const result = await res.json();
+                console.log('Route delete result:', result);
+                
+                // Refresh all data to reflect cascade deletions
+                await refreshAllData();
+                
+                message.success(`Route deleted successfully along with ${result.deletedSchedules?.length || 0} related schedules`);
+            } else {
+                const error = await res.json();
+                message.error('Failed to delete route: ' + (error.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error deleting route:', error);
+            message.error('Error deleting route');
+        }
     };
 
     const handleAddSchedule = async (values) => {
-        const res = await fetch('http://localhost:5000/api/schedules', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(values)
-        });
-        const newSchedule = await res.json();
-        setSchedule([...schedule, newSchedule]);
-        message.success('Schedule added successfully');
-        setIsScheduleModalOpen(false);
+        try {
+            // Find the cab and route IDs based on the selected names
+            const selectedCab = cabs.find(cab => cab.name === values.cab);
+            const selectedRouteText = values.route; // "Origin - Destination"
+            const selectedRoute = routes.find(route => `${route.from} - ${route.to}` === selectedRouteText);
+            
+            if (!selectedCab || !selectedRoute) {
+                message.error('Please select valid cab and route');
+                return;
+            }
+            
+            const scheduleData = {
+                cab_id: selectedCab.id,
+                route_id: selectedRoute.id,
+                frequency: values.frequency,
+                time: values.time.format('HH:mm:ss'),
+                price: parseFloat(values.price)
+            };
+            
+            const res = await fetch('http://localhost:5000/api/schedules', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(scheduleData)
+            });
+            
+            if (res.ok) {
+                const newSchedule = await res.json();
+                console.log('New schedule added:', newSchedule);
+                
+                // Refresh all data to ensure consistency
+                await refreshAllData();
+                
+                message.success('Schedule added successfully');
+                setIsScheduleModalOpen(false);
+                scheduleForm.resetFields();
+            } else {
+                const error = await res.json();
+                message.error('Failed to add schedule: ' + (error.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error adding schedule:', error);
+            message.error('Error adding schedule: ' + error.message);
+        }
     };
 
     const handleDeleteSchedule = async (id) => {
-        await fetch(`http://localhost:5000/api/schedules/${id}`, { method: 'DELETE' });
-        setSchedule(schedule.filter(sch => sch.id !== id));
-        message.success('Schedule deleted successfully');
+        try {
+            const res = await fetch(`http://localhost:5000/api/schedules/${id}`, { method: 'DELETE' });
+            
+            if (res.ok) {
+                // Refresh all data to ensure consistency
+                await refreshAllData();
+                message.success('Schedule deleted successfully');
+            } else {
+                const error = await res.json();
+                message.error('Failed to delete schedule: ' + (error.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error deleting schedule:', error);
+            message.error('Error deleting schedule');
+        }
     };
 
     // --- Table Columns ---
@@ -161,11 +307,14 @@ const CabRouteManagement = () => {
             <Modal
                 title="Add Cab"
                 open={isCabModalOpen}
-                onCancel={() => setIsCabModalOpen(false)}
-                onOk={() => form.submit()}
+                onCancel={() => {
+                    setIsCabModalOpen(false);
+                    cabForm.resetFields();
+                }}
+                onOk={() => cabForm.submit()}
                 okText="Save"
             >
-                <Form form={form} layout="vertical" onFinish={handleAddCab}>
+                <Form form={cabForm} layout="vertical" onFinish={handleAddCab}>
                     <Form.Item name="name" label="Cab Name" rules={[{ required: true }]}>
                         <Input />
                     </Form.Item>
@@ -185,11 +334,14 @@ const CabRouteManagement = () => {
             <Modal
                 title="Add Route"
                 open={isRouteModalOpen}
-                onCancel={() => setIsRouteModalOpen(false)}
-                onOk={() => form.submit()}
+                onCancel={() => {
+                    setIsRouteModalOpen(false);
+                    routeForm.resetFields();
+                }}
+                onOk={() => routeForm.submit()}
                 okText="Save"
             >
-                <Form form={form} layout="vertical" onFinish={handleAddRoute}>
+                <Form form={routeForm} layout="vertical" onFinish={handleAddRoute}>
                     <Form.Item name="from" label="From" rules={[{ required: true }]}>
                         <Input />
                     </Form.Item>
@@ -205,11 +357,14 @@ const CabRouteManagement = () => {
             <Modal
                 title="Add Schedule"
                 open={isScheduleModalOpen}
-                onCancel={() => setIsScheduleModalOpen(false)}
-                onOk={() => form.submit()}
+                onCancel={() => {
+                    setIsScheduleModalOpen(false);
+                    scheduleForm.resetFields();
+                }}
+                onOk={() => scheduleForm.submit()}
                 okText="Save"
             >
-                <Form form={form} layout="vertical" onFinish={handleAddSchedule}>
+                <Form form={scheduleForm} layout="vertical" onFinish={handleAddSchedule}>
                     <Form.Item name="cab" label="Cab" rules={[{ required: true }]}>
                         <Select>
                             {cabs.map(cab => <Option key={cab.id} value={cab.name}>{cab.name}</Option>)}
